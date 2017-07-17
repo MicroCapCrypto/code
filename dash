@@ -1,0 +1,72 @@
+function processDASHAPI() {
+ 
+  // Link the script with a spreadsheet using the unique identifier found in the spreadsheet web address
+  var ss = SpreadsheetApp.openById('1XlsWBKsi2_p3WvECzfJ52LM8y9dKe5RlFIE_rYBtKIg');
+ 
+  var APIPullSheet = ss.getSheetByName("APIPull");
+ 
+  // Clear Columns A, B, C & D
+  APIPullSheet.getRange('A2:F19999').clearContent();
+ 
+  var url= "https://poloniex.com/public?command=returnTicker";
+  var responseAPI = UrlFetchApp.fetch(url);
+  var parcedData = JSON.parse(responseAPI.getContentText());
+  
+  var last = [];
+  var lowestAsk = [];
+  var highestBid = [];
+  var percentChange = [];
+  var baseVolume = [];
+  var quoteVolume = [];
+
+      last.push(['last']);
+      lowestAsk.push(['lowestAsk']);
+      highestBid.push(['highestBid']);
+      percentChange.push(['percentChange']);
+      baseVolume.push(['baseVolume']);
+      quoteVolume.push(['quoteVolume']);
+  
+  
+  last.push([parcedData.BTC_DASH.last]);
+  lowestAsk.push([parcedData.BTC_DASH.lowestAsk]);
+  highestBid.push([parcedData.BTC_DASH.highestBid]);
+  percentChange.push([parcedData.BTC_DASH.percentChange]);
+  baseVolume.push([parcedData.BTC_DASH.baseVolume]);
+  quoteVolume.push([parcedData.BTC_DASH.quoteVolume]);
+ 
+  lastRange = APIPullSheet.getRange(1, 1, last.length, 1);  // Put isFrozen in column A
+  lastRange.setValues(last);
+  
+  lowestAskRange = APIPullSheet.getRange(1, 2, lowestAsk.length, 1);  // Put lowestAsk in column B
+  lowestAskRange.setValues(lowestAsk);
+
+  highestBidRange = APIPullSheet.getRange(1, 3, highestBid.length, 1);  // Put highestBid in column C
+  highestBidRange.setValues(highestBid);
+  
+  percentChangeRange = APIPullSheet.getRange(1, 4, percentChange.length, 1);  // Put percentChange in column D
+  percentChangeRange.setValues(percentChange);
+  
+  baseVolumeRange = APIPullSheet.getRange(1, 5, baseVolume.length, 1);  // Put baseVolume in column E
+  baseVolumeRange.setValues(baseVolume);
+  
+  quoteVolumeRange = APIPullSheet.getRange(1, 6, quoteVolume.length, 1);  // Put quoteVolume in column F
+  quoteVolumeRange.setValues(quoteVolume);
+  
+ 
+  // Append Latest Data to End of the File
+  var tableData = ss.getSheetByName("TableData");
+  var rangeData = tableData.getRange("I1:O1");  
+  var latestData = rangeData.getValues();   // Put I1 to O1 in latestData variable
+  tableData.appendRow(latestData[0]);   // Put the data at the bottom of the spreadsheet
+ 
+  // Keep 144 rows - Delete any extra starting at row 2
+  var rowsToKeep = 5000;   // 5000 at request of Edwin
+  var totalRows = tableData.getLastRow();
+  var numToDelete = totalRows - rowsToKeep;
+    if (numToDelete > 0)
+       {
+         tableData.deleteRows(2, numToDelete);  // Purge Extra Rows - Starting With Row 2 (oldest)
+       }
+
+ 
+}
